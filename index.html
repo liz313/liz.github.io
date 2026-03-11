@@ -34,6 +34,66 @@
             }
         }
     </script>
+    <!-- 内联关键CSS -->
+    <style>
+        /* 关键样式直接内联，确保快速渲染 */
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #F9FAFB;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .scroller-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(255, 107, 0, 0.4), 0 8px 10px -6px rgba(255, 107, 0, 0.4);
+            overflow: hidden;
+        }
+        
+        .scroller {
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scroller-text {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            color: #FF6B00;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s linear;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+        }
+        
+        .scroller-highlight {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 80px;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 142, 0, 0.2) 50%, rgba(255, 107, 0, 0.1) 100%);
+            border-top: 2px solid #FF6B00;
+            border-bottom: 2px solid #FF6B00;
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+    
     <style type="text/tailwindcss">
         @layer utilities {
             .text-shadow {
@@ -282,6 +342,18 @@
         </div>
     </div>
     
+    <!-- 预加载器脚本 -->
+    <script>
+        // 确保所有资源加载完成后再显示页面
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '1';
+            document.body.style.transition = 'opacity 0.5s ease-in-out';
+        });
+        
+        // 设置初始状态
+        document.body.style.opacity = '0';
+    </script>
+    
     <script>
         // 预设外卖选项
         const foodCategories = {
@@ -334,8 +406,20 @@
         
         // 初始化应用
         function init() {
-            renderCustomOptions();
-            setupEventListeners();
+            // 确保DOM完全加载
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    renderCustomOptions();
+                    setupEventListeners();
+                    // 更新初始显示
+                    scrollerText.textContent = currentFoods[0] || '准备开始';
+                });
+            } else {
+                renderCustomOptions();
+                setupEventListeners();
+                // 更新初始显示
+                scrollerText.textContent = currentFoods[0] || '准备开始';
+            }
         }
         
         // 渲染自定义选项
