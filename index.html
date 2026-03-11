@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外卖随机滚动 - 今天吃什么</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- GSAP 动画库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF6B00',
+                        secondary: '#3498DB',
+                        accent: '#FFD166',
+                        dark: '#2C3E50',
+                        light: '#F8F9FA'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            .text-shadow-lg {
+                text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+            }
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #FF6B00 0%, #FF8E00 100%);
+            }
+            .bg-gradient-secondary {
+                background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%);
+            }
+            .wheel-shadow {
+                box-shadow: 0 10px 25px -5px rgba(255, 107, 0, 0.4), 0 8px 10px -6px rgba(255, 107, 0, 0.4);
+            }
+            .pointer-shadow {
+                filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+            }
+        }
+        
+        /* 文字滚动样式 */
+        .scroller-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(255, 107, 0, 0.4), 0 8px 10px -6px rgba(255, 107, 0, 0.4);
+            overflow: hidden;
+        }
+        
+        .scroller {
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scroller-text {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            color: #FF6B00;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s linear;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+        }
+        
+        .scroller-highlight {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 80px;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 142, 0, 0.2) 50%, rgba(255, 107, 0, 0.1) 100%);
+            border-top: 2px solid #FF6B00;
+            border-bottom: 2px solid #FF6B00;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* 结果弹窗样式 */
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .result-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .result-content {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.3s;
+        }
+        
+        .result-modal.active .result-content {
+            transform: scale(1);
+        }
+        
+        /* 自定义选项样式 */
+        .custom-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+        
+        .custom-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 动画效果 */
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--color);
+            border-radius: 50%;
+            animation: confetti 3s ease-in-out forwards;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 标题区域 -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-primary mb-2 text-shadow">外卖随机滚动</h1>
+            <p class="text-lg text-gray-600">解决你的选择困难症，随机决定今天吃什么！</p>
+        </header>
+        
+        <!-- 主要内容区域 -->
+        <main class="max-w-4xl mx-auto">
+            <!-- 文字滚动区域 -->
+            <div class="mb-12">
+                <div class="scroller-container">
+                    <div class="scroller-highlight"></div>
+                    <div id="scroller" class="scroller">
+                        <div id="scrollerText" class="scroller-text">准备开始</div>
+                    </div>
+                </div>
+                
+                <!-- 控制按钮 -->
+                <div class="flex justify-center mt-8 space-x-4">
+                    <button id="spinBtn" class="bg-gradient-primary text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
+                        <i class="fa fa-play mr-2"></i>开始滚动
+                    </button>
+                    <button id="stopBtn" class="bg-red-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" disabled>
+                        <i class="fa fa-stop mr-2"></i>停止
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 自定义选项区域 -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-dark mb-4 flex items-center">
+                    <i class="fa fa-list-ul text-primary mr-2"></i>自定义选项
+                </h2>
+                
+                <div class="flex mb-4">
+                    <input type="text" id="newOption" class="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="输入你想吃的外卖...">
+                    <button id="addBtn" class="bg-secondary text-white font-bold px-6 py-2 rounded-r-lg hover:bg-blue-600 transition-colors focus:outline-none">
+                        <i class="fa fa-plus mr-1"></i>添加
+                    </button>
+                </div>
+                
+                <div id="customOptions" class="max-h-60 overflow-y-auto pr-2">
+                    <!-- 自定义选项将在这里动态生成 -->
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-500 mb-2">不想自己想？试试我们的推荐！</p>
+                    <button id="recommendBtn" class="bg-accent text-dark font-bold py-2 px-6 rounded-lg shadow hover:shadow-md transition-all focus:outline-none">
+                        <i class="fa fa-lightbulb-o mr-2"></i>推荐热门外卖
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 预设分类区域 -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-dark mb-4 flex items-center">
+                    <i class="fa fa-star text-primary mr-2"></i>快速选择分类
+                </h2>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button class="category-btn bg-red-100 text-red-600 p-4 rounded-lg shadow hover:shadow-md transition-all flex flex-col items-center justify-center" data-category="popular">
+                        <i class="fa fa-fire text-2xl mb-2"></i>
+                        <span>热门外卖</span>
+                    </button>
+                    <button class="category-btn bg-orange-100 text-orange-600 p-4 rounded-lg shadow hover:shadow-md transition-all flex flex-col items-center justify-center" data-category="chinese">
+                        <i class="fa fa-cutlery text-2xl mb-2"></i>
+                        <span>中式快餐</span>
+                    </button>
+                    <button class="category-btn bg-blue-100 text-blue-600 p-4 rounded-lg shadow hover:shadow-md transition-all flex flex-col items-center justify-center" data-category="western">
+                        <i class="fa fa-birthday-cake text-2xl mb-2"></i>
+                        <span>西式快餐</span>
+                    </button>
+                    <button class="category-btn bg-green-100 text-green-600 p-4 rounded-lg shadow hover:shadow-md transition-all flex flex-col items-center justify-center" data-category="drinks">
+                        <i class="fa fa-glass text-2xl mb-2"></i>
+                        <span>饮品甜点</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 页脚 -->
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>© 2026 外卖随机大转盘 - 解决你的选择困难症</p>
+        </footer>
+    </div>
+    
+    <!-- 结果弹窗 -->
+    <div id="resultModal" class="result-modal">
+        <div class="result-content">
+            <button id="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none">
+                <i class="fa fa-times text-xl"></i>
+            </button>
+            <h2 class="text-3xl font-bold text-primary mb-2">恭喜你！</h2>
+            <p class="text-lg text-gray-600 mb-4">今天的午餐/晚餐是：</p>
+            <div id="resultFood" class="text-4xl font-bold text-dark mb-6 text-shadow"></div>
+            <button id="spinAgainBtn" class="bg-gradient-primary text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 focus:outline-none">
+                <i class="fa fa-refresh mr-2"></i>再转一次
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // 预设外卖选项
+        const foodCategories = {
+            popular: [
+                '麻辣烫', '烧烤', '麻辣香锅', '奶茶', '螺蛳粉', 
+                '汉堡', '皮蛋瘦肉粥', '鸡公煲', '盖浇饭', '黄焖鸡米饭'
+            ],
+            chinese: [
+                '老乡鸡', '乡村基', '米村拌饭', '南城香', '永和大王',
+                '真功夫', '杨铭宇黄焖鸡米饭', '阿香米线', '曼玲粥店', '犟骨头排骨饭'
+            ],
+            western: [
+                '肯德基', '麦当劳', '华莱士', '塔斯汀', '德克士',
+                '汉堡王', '赛百味', '必胜客', '达美乐', '尊宝比萨'
+            ],
+            drinks: [
+                '蜜雪冰城', '霸王茶姬', '古茗', '茶百道', '喜茶',
+                '奈雪的茶', '茶颜悦色', '沪上阿姨', 'CoCo都可', '书亦烧仙草'
+            ]
+        };
+        
+        // 颜色配置
+        const colors = [
+            '#FF6B00', '#FF8E00', '#FFD166', '#06D6A0', '#118AB2', 
+            '#073B4C', '#EF476F', '#FFD166', '#06D6A0', '#118AB2',
+            '#073B4C', '#EF476F', '#FF6B00', '#FF8E00', '#FFD166'
+        ];
+        
+        // 应用状态
+        let currentFoods = [...foodCategories.popular];
+        let isScrolling = false;
+        let scrollInterval = null;
+        let currentIndex = 0;
+        let scrollSpeed = 100; // 初始滚动速度（毫秒）
+        
+        // DOM 元素
+        const scroller = document.getElementById('scroller');
+        const scrollerText = document.getElementById('scrollerText');
+        const spinBtn = document.getElementById('spinBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const newOptionInput = document.getElementById('newOption');
+        const addBtn = document.getElementById('addBtn');
+        const customOptionsContainer = document.getElementById('customOptions');
+        const recommendBtn = document.getElementById('recommendBtn');
+        const resultModal = document.getElementById('resultModal');
+        const resultFood = document.getElementById('resultFood');
+        const closeModal = document.getElementById('closeModal');
+        const spinAgainBtn = document.getElementById('spinAgainBtn');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        
+        // 初始化应用
+        function init() {
+            renderCustomOptions();
+            setupEventListeners();
+        }
+        
+        // 渲染自定义选项
+        function renderCustomOptions() {
+            customOptionsContainer.innerHTML = '';
+            
+            currentFoods.forEach((food, index) => {
+                const item = document.createElement('div');
+                item.className = 'custom-item';
+                item.innerHTML = `
+                    <span class="font-medium">${food}</span>
+                    <button class="delete-btn text-red-500 hover:text-red-700 focus:outline-none" data-index="${index}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                `;
+                customOptionsContainer.appendChild(item);
+            });
+            
+            // 添加删除按钮事件监听
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.currentTarget.dataset.index);
+                    removeFood(index);
+                });
+            });
+        }
+        
+        // 设置事件监听
+        function setupEventListeners() {
+            // 开始滚动按钮
+            spinBtn.addEventListener('click', startScrolling);
+            
+            // 停止按钮
+            stopBtn.addEventListener('click', stopScrolling);
+            
+            // 添加选项
+            addBtn.addEventListener('click', addFood);
+            newOptionInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addFood();
+            });
+            
+            // 推荐按钮
+            recommendBtn.addEventListener('click', showRecommendations);
+            
+            // 结果弹窗
+            closeModal.addEventListener('click', hideResult);
+            spinAgainBtn.addEventListener('click', () => {
+                hideResult();
+                startScrolling();
+            });
+            
+            // 分类按钮
+            categoryBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const category = btn.dataset.category;
+                    if (foodCategories[category]) {
+                        currentFoods = [...foodCategories[category]];
+                        renderCustomOptions();
+                        
+                        // 如果正在滚动，先停止
+                        if (isScrolling) {
+                            stopScrolling();
+                        }
+                        
+                        // 更新显示
+                        scrollerText.textContent = currentFoods[0] || '无选项';
+                        
+                        // 高亮选中的分类
+                        categoryBtns.forEach(b => b.classList.remove('ring-2', 'ring-primary'));
+                        btn.classList.add('ring-2', 'ring-primary');
+                    }
+                });
+            });
+        }
+        
+        // 开始滚动
+        function startScrolling() {
+            if (isScrolling || currentFoods.length === 0) return;
+            
+            isScrolling = true;
+            spinBtn.disabled = true;
+            spinBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            stopBtn.disabled = false;
+            stopBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // 重置索引和速度
+            currentIndex = 0;
+            scrollSpeed = 100;
+            
+            // 创建滚动动画
+            animateScroll();
+        }
+        
+        // 滚动动画
+        function animateScroll() {
+            if (!isScrolling) return;
+            
+            // 更新文本
+            scrollerText.textContent = currentFoods[currentIndex];
+            
+            // 应用弹跳动画
+            gsap.fromTo(scrollerText, 
+                { y: 20, opacity: 0.5 },
+                { y: 0, opacity: 1, duration: 0.1, ease: "power2.out" }
+            );
+            
+            // 更新索引
+            currentIndex = (currentIndex + 1) % currentFoods.length;
+            
+            // 设置下一次滚动
+            scrollInterval = setTimeout(animateScroll, scrollSpeed);
+        }
+        
+        // 停止滚动
+        function stopScrolling() {
+            if (!isScrolling) return;
+            
+            // 清除滚动间隔
+            clearTimeout(scrollInterval);
+            
+            // 随机选择一个结果
+            const randomIndex = Math.floor(Math.random() * currentFoods.length);
+            const selectedFood = currentFoods[randomIndex];
+            
+            // 显示最终结果
+            scrollerText.textContent = selectedFood;
+            
+            // 更新状态
+            isScrolling = false;
+            spinBtn.disabled = false;
+            spinBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            stopBtn.disabled = true;
+            stopBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            // 显示结果弹窗
+            showResult(randomIndex);
+        }
+        
+        // 添加食物选项
+        function addFood() {
+            const newFood = newOptionInput.value.trim();
+            if (newFood && !currentFoods.includes(newFood)) {
+                currentFoods.push(newFood);
+                renderWheel();
+                renderCustomOptions();
+                newOptionInput.value = '';
+            }
+        }
+        
+        // 删除食物选项
+        function removeFood(index) {
+            if (currentFoods.length <= 2) {
+                alert('至少需要保留2个选项才能旋转！');
+                return;
+            }
+            
+            currentFoods.splice(index, 1);
+            renderWheel();
+            renderCustomOptions();
+        }
+        
+        // 显示推荐
+        function showRecommendations() {
+            const allCategories = Object.values(foodCategories).flat();
+            const randomFood = allCategories[Math.floor(Math.random() * allCategories.length)];
+            
+            if (!currentFoods.includes(randomFood)) {
+                currentFoods.push(randomFood);
+                renderWheel();
+                renderCustomOptions();
+                
+                // 显示提示
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
+                toast.textContent = `已添加推荐: ${randomFood}`;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        }
+        
+        // 显示结果
+        function showResult(index) {
+            const food = currentFoods[index];
+            resultFood.textContent = food;
+            
+            // 创建庆祝效果
+            createConfetti();
+            
+            // 显示弹窗
+            resultModal.classList.add('active');
+        }
+        
+        // 隐藏结果
+        function hideResult() {
+            resultModal.classList.remove('active');
+            
+            // 清除所有彩纸
+            const confettiElements = document.querySelectorAll('.confetti');
+            confettiElements.forEach(el => el.remove());
+        }
+        
+        // 创建彩纸效果
+        function createConfetti() {
+            const confettiCount = 100;
+            const confettiColors = ['#FF6B00', '#FFD166', '#06D6A0', '#118AB2', '#EF476F'];
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.top = `${Math.random() * 100}vh`;
+                confetti.style.setProperty('--color', confettiColors[Math.floor(Math.random() * confettiColors.length)]);
+                confetti.style.width = `${Math.random() * 10 + 5}px`;
+                confetti.style.height = `${Math.random() * 10 + 5}px`;
+                confetti.style.animationDelay = `${Math.random() * 3}s`;
+                confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                
+                document.body.appendChild(confetti);
+            }
+        }
+        
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>
