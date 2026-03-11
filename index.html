@@ -263,7 +263,7 @@
         
         <!-- 页脚 -->
         <footer class="mt-12 text-center text-gray-500 text-sm">
-            <p>© 2026 外卖随机大转盘 - 解决你的选择困难症</p>
+            <p>© 2026 外卖随机滚动 - 解决你的选择困难症</p>
         </footer>
     </div>
     
@@ -479,8 +479,13 @@
             const newFood = newOptionInput.value.trim();
             if (newFood && !currentFoods.includes(newFood)) {
                 currentFoods.push(newFood);
-                renderWheel();
                 renderCustomOptions();
+                
+                // 如果当前没有显示任何内容，更新显示
+                if (scrollerText.textContent === '准备开始' || scrollerText.textContent === '无选项') {
+                    scrollerText.textContent = newFood;
+                }
+                
                 newOptionInput.value = '';
             }
         }
@@ -488,13 +493,19 @@
         // 删除食物选项
         function removeFood(index) {
             if (currentFoods.length <= 2) {
-                alert('至少需要保留2个选项才能旋转！');
+                alert('至少需要保留2个选项才能滚动！');
                 return;
             }
             
             currentFoods.splice(index, 1);
-            renderWheel();
             renderCustomOptions();
+            
+            // 如果删除的是当前显示的项，更新显示
+            if (currentFoods.length > 0) {
+                scrollerText.textContent = currentFoods[0];
+            } else {
+                scrollerText.textContent = '无选项';
+            }
         }
         
         // 显示推荐
