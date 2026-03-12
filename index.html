@@ -3,660 +3,834 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>外卖随机滚动 - 今天吃什么</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <!-- GSAP 动画库 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#FF6B00',
-                        secondary: '#3498DB',
-                        accent: '#FFD166',
-                        dark: '#2C3E50',
-                        light: '#F8F9FA'
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                    animation: {
-                        'spin-slow': 'spin 3s linear infinite',
-                        'bounce-slow': 'bounce 2s infinite',
-                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- 内联关键CSS -->
+    <title>焦虑程度专业心理测评</title>
     <style>
-        /* 关键样式直接内联，确保快速渲染 */
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background-color: #F9FAFB;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
         }
-        
-        .scroller-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
+        body {
+            background: #f7f8fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 750px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(255, 107, 0, 0.4), 0 8px 10px -6px rgba(255, 107, 0, 0.4);
-            overflow: hidden;
+            padding: 15px;
         }
-        
-        .scroller {
-            height: 200px;
+
+        /* 激活登录页 */
+        .login-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px 30px;
+            margin: 60px auto;
+            max-width: 420px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .login-box h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #222;
+        }
+        .login-box .desc {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+        .login-box input:focus {
+            border-color: #9d4edd;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 14px;
+            background: #9d4edd;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .login-box .tip {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #999;
+        }
+        #errMsg {
+            color: #f53f3f;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        /* 页面通用 */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            display: none;
+        }
+        .header h1 {
+            font-size: 22px;
+            color: #222;
+        }
+        .header p {
+            font-size: 13px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .start-page, .test-page, .result-page {
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .start-page {
+            text-align: center;
+            padding: 50px 25px;
+        }
+        .start-page h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        .start-page .info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .start-page button {
+            padding: 14px 30px;
+            background: #9d4edd;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+        }
+
+        /* 题目 */
+        .question-box {
+            margin-bottom: 20px;
+        }
+        .question-box h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .options {
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
+            gap: 10px;
         }
-        
-        .scroller-text {
-            font-size: 3rem;
-            font-weight: bold;
-            text-align: center;
-            color: #FF6B00;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-            transition: transform 0.1s linear;
-            height: 60px;
+        .option {
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .option.active {
+            background: #f3e8ff;
+            border-color: #9d4edd;
+            color: #9d4edd;
+        }
+        .nav {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 20px;
-        }
-        
-        .scroller-highlight {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 80px;
-            transform: translateY(-50%);
-            background: linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 142, 0, 0.2) 50%, rgba(255, 107, 0, 0.1) 100%);
-            border-top: 2px solid #FF6B00;
-            border-bottom: 2px solid #FF6B00;
-            pointer-events: none;
-            z-index: 1;
-        }
-    </style>
-    
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .text-shadow {
-                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            }
-            .text-shadow-lg {
-                text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
-            }
-            .bg-gradient-primary {
-                background: linear-gradient(135deg, #FF6B00 0%, #FF8E00 100%);
-            }
-            .bg-gradient-secondary {
-                background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%);
-            }
-            .wheel-shadow {
-                box-shadow: 0 10px 25px -5px rgba(255, 107, 0, 0.4), 0 8px 10px -6px rgba(255, 107, 0, 0.4);
-            }
-            .pointer-shadow {
-                filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
-            }
-        }
-        
-        /* 文字滚动样式 */
-        .scroller-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(255, 107, 0, 0.4), 0 8px 10px -6px rgba(255, 107, 0, 0.4);
-            overflow: hidden;
-        }
-        
-        .scroller {
-            height: 200px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .scroller-text {
-            font-size: 3rem;
-            font-weight: bold;
-            text-align: center;
-            color: #FF6B00;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-            transition: transform 0.1s linear;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 20px;
-        }
-        
-        .scroller-highlight {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 80px;
-            transform: translateY(-50%);
-            background: linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 142, 0, 0.2) 50%, rgba(255, 107, 0, 0.1) 100%);
-            border-top: 2px solid #FF6B00;
-            border-bottom: 2px solid #FF6B00;
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        /* 结果弹窗样式 */
-        .result-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        
-        .result-modal.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .result-content {
-            background: white;
-            border-radius: 20px;
-            padding: 2rem;
-            text-align: center;
-            max-width: 90%;
-            width: 400px;
-            position: relative;
-            transform: scale(0.8);
-            transition: transform 0.3s;
-        }
-        
-        .result-modal.active .result-content {
-            transform: scale(1);
-        }
-        
-        /* 自定义选项样式 */
-        .custom-item {
-            display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s;
+            align-items: center;
+            margin-top: 20px;
         }
-        
-        .custom-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .nav button {
+            padding: 10px 18px;
+            background: #9d4edd;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
         }
-        
-        /* 动画效果 */
-        @keyframes confetti {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        .nav button:disabled {
+            background: #ccc;
         }
-        
-        .confetti {
+        .progress {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* 结果页 */
+        .result-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .result-total {
+            font-size: 36px;
+            font-weight: bold;
+            color: #9d4edd;
+            margin: 10px 0;
+        }
+        .result-level {
+            font-size: 18px;
+            color: #555;
+        }
+        .radar-box {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+        .radar-box canvas {
+            max-width: 100%;
+        }
+        .score-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 14px;
+            gap: 12px;
+        }
+        .score-name {
+            width: 90px;
+            font-size: 14px;
+        }
+        .score-bar {
+            flex: 1;
+            height: 18px;
+            background: #f1f1f1;
+            border-radius: 9px;
+            overflow: hidden;
+        }
+        .score-bar-inner {
+            height: 100%;
+            background: #9d4edd;
+            border-radius: 9px;
+        }
+        .score-num {
+            width: 50px;
+            text-align: right;
+            font-size: 14px;
+        }
+        .score-tag {
+            width: 100px;
+            font-size: 13px;
+            color: #9d4edd;
+            font-weight: 500;
+        }
+        .section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .section h4 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #222;
+        }
+        .section p, .section li {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .disclaimer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+        .result-btns {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .result-btns button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+        }
+        .btn-primary {
+            background: #9d4edd;
+            color: #fff;
+        }
+        .btn-light {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* 水印 */
+        .watermark {
             position: fixed;
-            width: 10px;
-            height: 10px;
-            background: var(--color);
-            border-radius: 50%;
-            animation: confetti 3s ease-in-out forwards;
-            z-index: 1000;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: rgba(0,0,0,0.1);
+            pointer-events: none;
+            z-index: -1;
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <!-- 标题区域 -->
-        <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-primary mb-2 text-shadow">外卖随机滚动</h1>
-            <p class="text-lg text-gray-600">解决你的选择困难症，随机决定今天吃什么！</p>
-        </header>
-        
-        <!-- 主要内容区域 -->
-        <main class="max-w-4xl mx-auto">
-            <!-- 文字滚动区域 -->
-            <div class="mb-12">
-                <div class="scroller-container">
-                    <div class="scroller-highlight"></div>
-                    <div id="scroller" class="scroller">
-                        <div id="scrollerText" class="scroller-text">准备开始</div>
-                    </div>
-                </div>
-                
-                <!-- 控制按钮 -->
-                <div class="flex justify-center mt-8 space-x-4">
-                    <button id="spinBtn" class="bg-gradient-primary text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
-                        <i class="fa fa-play mr-2"></i>开始滚动
-                    </button>
-                    <button id="stopBtn" class="bg-red-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" disabled>
-                        <i class="fa fa-stop mr-2"></i>停止
-                    </button>
-                </div>
-            </div>
-            
-            <!-- 自定义选项区域 -->
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-                <h2 class="text-2xl font-bold text-dark mb-4 flex items-center">
-                    <i class="fa fa-list-ul text-primary mr-2"></i>自定义选项
-                </h2>
-                
-                <div class="flex mb-4">
-                    <input type="text" id="newOption" class="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="输入你想吃的外卖...">
-                    <button id="addBtn" class="bg-secondary text-white font-bold px-6 py-2 rounded-r-lg hover:bg-blue-600 transition-colors focus:outline-none">
-                        <i class="fa fa-plus mr-1"></i>添加
-                    </button>
-                </div>
-                
-                <div id="customOptions" class="max-h-60 overflow-y-auto pr-2">
-                    <!-- 自定义选项将在这里动态生成 -->
-                </div>
-                
-                <div class="mt-4 text-center">
-                    <p class="text-sm text-gray-500 mb-2">不想自己想？试试我们的推荐！</p>
-                    <button id="recommendBtn" class="bg-accent text-dark font-bold py-2 px-6 rounded-lg shadow hover:shadow-md transition-all focus:outline-none">
-                        <i class="fa fa-lightbulb-o mr-2"></i>推荐热门外卖
-                    </button>
-                </div>
-            </div>
-            
-            <!-- 预设分类区域 -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-2xl font-bold text-dark mb-4 flex items-center">
-                    <i class="fa fa-star text-primary mr-2"></i>快速选择分类
-                </h2>
-                
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button class="category-btn bg-red-100 text-red-600 p-4 rounded-lg shadow hover:shadow-md transition-all flex flex-col items-center justify-center" data-category="popular">
-                        <i class="fa fa-fire text-2xl mb-2"></i>
-                        <span>热门外卖</span>
-                    </button>
-                    <button class="category-btn bg-orange-100 text-orange-600 p-4 rounded-lg shadow hover:shadow-md transition-all flex flex-col items-center justify-center" data-category="chinese">
-                        <i class="fa fa-cutlery text-2xl mb-2"></i>
-                        <span>中式快餐</span>
-                    </button>
-                    <button class="category-btn bg-blue-100 text-blue-600 p-4 rounded-lg shadow hover:shadow-md transition-all flex flex-col items-center justify-center" data-category="western">
-                        <i class="fa fa-birthday-cake text-2xl mb-2"></i>
-                        <span>西式快餐</span>
-                    </button>
-                    <button class="category-btn bg-green-100 text-green-600 p-4 rounded-lg shadow hover:shadow-md transition-all flex flex-col items-center justify-center" data-category="drinks">
-                        <i class="fa fa-glass text-2xl mb-2"></i>
-                        <span>饮品甜点</span>
-                    </button>
-                </div>
-            </div>
-        </main>
-        
-        <!-- 页脚 -->
-        <footer class="mt-12 text-center text-gray-500 text-sm">
-            <p>© 2026 外卖随机滚动 - 解决你的选择困难症</p>
-        </footer>
+<body>
+
+<div class="container">
+    <!-- 激活登录页 -->
+    <div class="login-box" id="loginBox">
+        <h2>测评权限验证</h2>
+        <p class="desc">请输入您购买的激活码</p>
+        <input type="text" id="keyInput" placeholder="请输入激活码" autocomplete="off">
+        <button onclick="checkActiveKey()">验证并进入测评</button>
+        <div class="tip">激活后24小时内可无限次使用</div>
+        <div id="errMsg"></div>
     </div>
-    
-    <!-- 结果弹窗 -->
-    <div id="resultModal" class="result-modal">
-        <div class="result-content">
-            <button id="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none">
-                <i class="fa fa-times text-xl"></i>
-            </button>
-            <h2 class="text-3xl font-bold text-primary mb-2">恭喜你！</h2>
-            <p class="text-lg text-gray-600 mb-4">今天的午餐/晚餐是：</p>
-            <div id="resultFood" class="text-4xl font-bold text-dark mb-6 text-shadow"></div>
-            <button id="spinAgainBtn" class="bg-gradient-primary text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 focus:outline-none">
-                <i class="fa fa-refresh mr-2"></i>再转一次
-            </button>
+
+    <!-- 头部 -->
+    <div class="header" id="mainHeader">
+        <h1>焦虑程度专业心理测评</h1>
+        <p>40题精准评估 | 24小时内有效</p>
+    </div>
+
+    <!-- 开始页 -->
+    <div class="start-page" id="startPage">
+        <h2>欢迎使用专业焦虑测评</h2>
+        <p class="info">请根据最近两周的真实感受选择答案</p>
+        <button onclick="startTest()">开始测评</button>
+    </div>
+
+    <!-- 测试页 -->
+    <div class="test-page" id="testPage">
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav">
+            <div class="progress" id="progress"></div>
+            <button id="prevBtn" onclick="prevQuestion()" disabled>上一题</button>
+            <button id="nextBtn" onclick="nextQuestion()">下一题</button>
+            <button id="submitBtn" onclick="submitTest()" style="display:none;">提交测评</button>
         </div>
     </div>
-    
-    <!-- 预加载器脚本 -->
-    <script>
-        // 确保所有资源加载完成后再显示页面
-        window.addEventListener('load', function() {
-            document.body.style.opacity = '1';
-            document.body.style.transition = 'opacity 0.5s ease-in-out';
+
+    <!-- 结果页 -->
+    <div class="result-page" id="resultPage">
+        <div class="result-title">
+            <h3>您的测评报告</h3>
+            <div class="result-total" id="totalScore">0</div>
+            <div class="result-level" id="scoreLevel">无焦虑</div>
+        </div>
+
+        <div class="radar-box">
+            <canvas id="radarCanvas" width="500" height="500"></canvas>
+        </div>
+
+        <div>
+            <div class="score-row">
+                <div class="score-name">生理焦虑</div>
+                <div class="score-bar"><div class="score-bar-inner" id="bar1"></div></div>
+                <div class="score-num" id="num1">0</div>
+                <div class="score-tag" id="tag1">无焦虑</div>
+            </div>
+            <div class="score-row">
+                <div class="score-name">认知焦虑</div>
+                <div class="score-bar"><div class="score-bar-inner" id="bar2"></div></div>
+                <div class="score-num" id="num2">0</div>
+                <div class="score-tag" id="tag2">无焦虑</div>
+            </div>
+            <div class="score-row">
+                <div class="score-name">行为焦虑</div>
+                <div class="score-bar"><div class="score-bar-inner" id="bar3"></div></div>
+                <div class="score-num" id="num3">0</div>
+                <div class="score-tag" id="tag3">无焦虑</div>
+            </div>
+            <div class="score-row">
+                <div class="score-name">情绪焦虑</div>
+                <div class="score-bar"><div class="score-bar-inner" id="bar4"></div></div>
+                <div class="score-num" id="num4">0</div>
+                <div class="score-tag" id="tag4">无焦虑</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h4>可能原因分析</h4>
+            <ul id="causeList"></ul>
+        </div>
+        <div class="section">
+            <h4>专业建议</h4>
+            <ul id="suggestList"></ul>
+        </div>
+
+        <div class="disclaimer">
+            本测评结果仅供参考，不构成医学诊断
+        </div>
+
+        <div class="result-btns">
+            <button class="btn-primary" onclick="saveResultImage()">保存报告图片</button>
+            <button class="btn-light" onclick="restartTest()">重新测评</button>
+        </div>
+    </div>
+</div>
+
+<!-- 水印 -->
+<div class="watermark">正版测评·禁止倒卖</div>
+
+<!-- html2canvas 生图 -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+// ==============================================
+// 一、商用权限核心：200个6位字母+数字随机激活码 + 24小时 + 一机一码
+// ==============================================
+const validKeys = [
+    "8A79s2", "5B87k9", "9C78j8", "7D69h7", "3E87g6",
+    "6F78f5", "4G87e4", "8H79d3", "2J87c2", "7K78b1",
+    "9L87a9", "5M78z8", "3N87y7", "8P79x6", "6Q87w5",
+    "4R78v4", "7S87u3", "9T79t2", "2U87s1", "5V78r9",
+    "8W87q8", "6X79p7", "4Y87o6", "7Z78n5", "9A87m4",
+    "3B79l3", "5C87k2", "8D78j1", "6E87i9", "4F79h8",
+    "7G87g7", "9H78f6", "2J87e5", "5K79d4", "8L87c3",
+    "6M78b2", "4N87a1", "7P79z9", "9Q87y8", "3R78x7",
+    "5S87w6", "8T79v5", "6U87u4", "4V78t3", "7W87s2",
+    "9X79r1", "2Y87q9", "5Z78p8", "8A79o7", "6B87n6",
+    "4C78m5", "7D87l4", "9E79k3", "3F87j2", "5G78i1",
+    "8H87h9", "6J79g8", "4K87f7", "7L78e6", "9M87d5",
+    "2N79c4", "5P87b3", "8Q78a2", "6R87z1", "4S79y9",
+    "7T87x8", "9U78w7", "3V87v6", "5W79u5", "8X87t4",
+    "6Y78s3", "4Z87r2", "7A79q1", "9B87p9", "2C78o8",
+    "5D87n7", "8E79m6", "6F87l5", "4G78k4", "7H87j3",
+    "9J79i2", "3K87h1", "5L78g9", "8M87f8", "6N79e7",
+    "4P87d6", "7Q78c5", "9R87b4", "2S79a3", "5T87z2",
+    "8U78y1", "6V87x9", "4W79w8", "7X87v7", "9Y78u6",
+    "3Z87t5", "5A79s4", "8B87r3", "6C78q2", "4D87p1",
+    "7E79o9", "9F87n8", "2G78m7", "5H87l6", "8J79k5",
+    "6K87j4", "4L78i3", "7M87h2", "9N79g1", "3P87f9",
+    "5Q78e8", "8R87d7", "6S79c6", "4T87b5", "7U78a4",
+    "9V87z3", "2W79y2", "5X87x1", "8Y79w9", "6Z87v8",
+    "4A78u7", "7B87t6", "9C79s5", "3D87r4", "5E78q3",
+    "8F87p2", "6G79o1", "4H87n9", "7J78m8", "9K87l7",
+    "2L79k6", "5M87j5", "8N78i4", "6P87h3", "4Q79g2",
+    "7R87f1", "9S79e9", "3T87d8", "5U78c7", "8V87b6",
+    "6W79a5", "4X87z4", "7Y78y3", "9Z87x2", "2A79w1",
+    "5B87v9", "8C78u8", "6D87t7", "4E79s6", "7F87r5",
+    "9G78q4", "3H87p3", "5J79o2", "8K87n1", "6L79m9",
+    "4M87l8", "7N78k7", "9P87j6", "2Q79i5", "5R87h4",
+    "8S78g3", "6T87f2", "4U79e1", "7V87d9", "9W78c8",
+    "3X87b7", "5Y79a6", "8Z87z5", "6A78y4", "4B87x3",
+    "7C79w2", "9D87v1", "2E79u9", "5F87t8", "8G78s7",
+    "6H87r6", "4J79q5", "7K87p4", "9L78o3", "3M87n2",
+    "5N79m1", "8P87l9", "6Q78k8", "4R87j7", "7S79i6",
+    "9T87h5", "2U78g4", "5V87f3", "8W79e2", "6X87d1",
+    "4Y79c9", "7Z87b8", "9A78a7", "3B87z6", "5C79y5",
+    "8D87x4", "6E78w3", "4F87v2", "7G79u1", "9H87t9",
+    "2J78s8", "5K87r7", "8L79q6", "6M87p5", "4N78o4",
+    "7P87n3", "9Q79m2", "3R87l1", "5S79k9", "8T87j8",
+    "6U78i7", "4V87h6", "7W79g5", "9X87f4", "2Y78e3",
+    "5Z87d2", "8A79c1", "6B87b9", "4C78a8", "7D87z7",
+    "9E79y6", "3F87x5", "5G78w4", "8H87v3", "6J79u2",
+    "4K87t1", "7L79s9", "9M87r8", "2N78q7", "5P87p6"
+];
+
+// 设备唯一标识（简单版一机一码）
+function getDeviceId() {
+    let id = localStorage.getItem("device_id");
+    if (!id) {
+        id = "DEV_" + Math.random().toString(36).substr(2) + Date.now();
+        localStorage.setItem("device_id", id);
+    }
+    return id;
+}
+
+// 验证激活码
+function checkActiveKey() {
+    const key = document.getElementById("keyInput").value.trim();
+    const err = document.getElementById("errMsg");
+    if (!validKeys.includes(key)) {
+        err.innerText = "激活码无效";
+        return;
+    }
+
+    const now = Date.now();
+    const device = getDeviceId();
+    const storeKey = "test_auth_" + key;
+    const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
+
+    // 一机一码：已绑定其他设备
+    if (data.device && data.device !== device) {
+        err.innerText = "该激活码已在其他设备使用";
+        return;
+    }
+
+    // 过期判断
+    if (data.activatedAt) {
+        const expire = data.activatedAt + 24 * 60 * 60 * 1000;
+        if (now > expire) {
+            err.innerText = "激活码已过期（24小时）";
+            return;
+        }
+    }
+
+    // 首次激活：绑定设备+时间
+    if (!data.activatedAt) {
+        localStorage.setItem(storeKey, JSON.stringify({
+            activatedAt: now,
+            device: device,
+            key: key
+        }));
+    }
+
+    // 登录成功
+    localStorage.setItem("current_key", key);
+    enterTest();
+}
+
+// 进入测评
+function enterTest() {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("mainHeader").style.display = "block";
+    document.getElementById("startPage").style.display = "block";
+}
+
+// 自动登录
+window.onload = function () {
+    const key = localStorage.getItem("current_key");
+    if (!key) return;
+    const data = JSON.parse(localStorage.getItem("test_auth_" + key) || "{}");
+    const device = getDeviceId();
+    if (data.device === device && data.activatedAt) {
+        const expire = data.activatedAt + 24 * 60 * 60 * 1000;
+        if (Date.now() < expire) {
+            enterTest();
+        }
+    }
+};
+
+// ==============================================
+// 二、测评题目
+// ==============================================
+const questions = [
+    {id:1, text:"我感到心跳加速或心悸", dim:"physical"},
+    {id:2, text:"我容易疲劳、精力不足", dim:"physical"},
+    {id:3, text:"我头痛、头晕", dim:"physical"},
+    {id:4, text:"我肌肉紧张酸痛", dim:"physical"},
+    {id:5, text:"我莫名出汗", dim:"physical"},
+    {id:6, text:"我胃部不适、恶心", dim:"physical"},
+    {id:7, text:"我入睡困难或易醒", dim:"physical"},
+    {id:8, text:"我胸闷、呼吸不畅", dim:"physical"},
+    {id:9, text:"我手脚麻木刺痛", dim:"physical"},
+    {id:10, text:"我口干舌燥", dim:"physical"},
+    {id:11, text:"我总担心坏事发生", dim:"cognitive"},
+    {id:12, text:"我难以集中注意力", dim:"cognitive"},
+    {id:13, text:"我胡思乱想停不下来", dim:"cognitive"},
+    {id:14, text:"我对未来感到不安", dim:"cognitive"},
+    {id:15, text:"我害怕失控、出丑", dim:"cognitive"},
+    {id:16, text:"我过度关注身体感受", dim:"cognitive"},
+    {id:17, text:"我预感有不幸发生", dim:"cognitive"},
+    {id:18, text:"我对自己没信心", dim:"cognitive"},
+    {id:19, text:"我难以做决定", dim:"cognitive"},
+    {id:20, text:"我反复想不愉快经历", dim:"cognitive"},
+    {id:21, text:"我回避社交", dim:"behavioral"},
+    {id:22, text:"我急躁没耐心", dim:"behavioral"},
+    {id:23, text:"我靠烟酒缓解紧张", dim:"behavioral"},
+    {id:24, text:"我拖延、逃避任务", dim:"behavioral"},
+    {id:25, text:"我反复检查确认", dim:"behavioral"},
+    {id:26, text:"我减少兴趣活动", dim:"behavioral"},
+    {id:27, text:"我说话急促结巴", dim:"behavioral"},
+    {id:28, text:"我坐立不安", dim:"behavioral"},
+    {id:29, text:"我回避压力场景", dim:"behavioral"},
+    {id:30, text:"我过度依赖陪伴", dim:"behavioral"},
+    {id:31, text:"我经常紧张不安", dim:"emotional"},
+    {id:32, text:"我容易烦躁易怒", dim:"emotional"},
+    {id:33, text:"我无助绝望", dim:"emotional"},
+    {id:34, text:"我对事物失去兴趣", dim:"emotional"},
+    {id:35, text:"我情绪低落悲伤", dim:"emotional"},
+    {id:36, text:"我焦虑恐慌", dim:"emotional"},
+    {id:37, text:"我对批评过于敏感", dim:"emotional"},
+    {id:38, text:"我缺乏安全感", dim:"emotional"},
+    {id:39, text:"我内疚自责", dim:"emotional"},
+    {id:40, text:"我孤独被孤立", dim:"emotional"}
+];
+
+let current = 0;
+let answers = Array(40).fill(0);
+let score = {physical:0, cognitive:0, behavioral:0, emotional:0};
+
+// ==============================================
+// 三、测评逻辑
+// ==============================================
+function startTest() {
+    current = 0;
+    answers = Array(40).fill(0);
+    score = {physical:0, cognitive:0, behavioral:0, emotional:0};
+    document.getElementById("startPage").style.display = "none";
+    document.getElementById("testPage").style.display = "block";
+    render();
+}
+
+function render() {
+    const q = questions[current];
+    const box = document.getElementById("questionBox");
+    const prog = document.getElementById("progress");
+    prog.innerText = `第 ${current+1}/40 题`;
+
+    let opts = "";
+    [1,2,3,4,5].forEach(v => {
+        const text = ["完全不符合","有点符合","一般符合","比较符合","完全符合"][v-1];
+        const active = answers[current] === v ? "active" : "";
+        opts += `<div class="option ${active}" onclick="select(${v})">${text}</div>`;
+    });
+
+    box.innerHTML = `
+        <h3>${q.id}. ${q.text}</h3>
+        <div class="options">${opts}</div>
+    `;
+
+    document.getElementById("prevBtn").disabled = current === 0;
+    document.getElementById("nextBtn").style.display = current === 39 ? "none" : "block";
+    document.getElementById("submitBtn").style.display = current === 39 ? "block" : "none";
+}
+
+function select(val) {
+    answers[current] = val;
+    render();
+}
+
+function prevQuestion() { current--; render(); }
+function nextQuestion() {
+    if (answers[current] === 0) { alert("请选择答案"); return; }
+    current++; render();
+}
+
+function submitTest() {
+    if (answers[current] === 0) { alert("请选择答案"); return; }
+    calcScore();
+    showResult();
+}
+
+function calcScore() {
+    score = {physical:0, cognitive:0, behavioral:0, emotional:0};
+    questions.forEach((q,i) => score[q.dim] += answers[i]);
+}
+
+// ==============================================
+// 四、结果展示 + 雷达图
+// ==============================================
+function showResult() {
+    document.getElementById("testPage").style.display = "none";
+    document.getElementById("resultPage").style.display = "block";
+
+    const total = score.physical + score.cognitive + score.behavioral + score.emotional;
+    document.getElementById("totalScore").innerText = total;
+    const [level,desc] = getTotalLevel(total);
+    document.getElementById("scoreLevel").innerText = `${level} - ${desc}`;
+
+    drawRadar();
+    showBars();
+    showCause();
+    showSuggest();
+}
+
+function getDimLevel(s) {
+    if (s <= 10) return ["无焦虑", "#4cd964"];
+    if (s <= 20) return ["轻度焦虑", "#ffcc00"];
+    if (s <= 30) return ["中度焦虑", "#ff9500"];
+    if (s <= 40) return ["重度焦虑", "#ff3b30"];
+    return ["极重度焦虑", "#c70000"];
+}
+
+function getTotalLevel(t) {
+    if (t <= 50) return ["无焦虑","状态良好"];
+    if (t <= 80) return ["轻度焦虑","可自我调节"];
+    if (t <= 120) return ["中度焦虑","建议积极调整"];
+    if (t <= 160) return ["重度焦虑","建议专业帮助"];
+    return ["极重度焦虑","请尽快专业干预"];
+}
+
+function showBars() {
+    const arr = [score.physical, score.cognitive, score.behavioral, score.emotional];
+    arr.forEach((v,i) => {
+        const w = Math.min(100, (v/50)*100);
+        document.getElementById("bar"+(i+1)).style.width = w + "%";
+        document.getElementById("num"+(i+1)).innerText = v;
+        document.getElementById("tag"+(i+1)).innerText = getDimLevel(v)[0];
+    });
+}
+
+// ==============================================
+// 五、修复后的雷达图（标签完整显示）
+// ==============================================
+function drawRadar() {
+    const ctx = document.getElementById("radarCanvas").getContext("2d");
+    const cx = 250, cy = 250, r = 150; // 画布扩大到500x500，中心移到(250,250)
+    const data = [score.physical, score.cognitive, score.behavioral, score.emotional];
+    const max = 50;
+    const angle = [-Math.PI/2, 0, Math.PI/2, Math.PI];
+    const labels = ["生理焦虑","认知焦虑","行为焦虑","情绪焦虑"];
+
+    ctx.clearRect(0,0,500,500);
+
+    // 网格
+    for (let i=1;i<=4;i++) {
+        ctx.beginPath();
+        angle.forEach((a,j) => {
+            const x = cx + (i/4)*r*Math.cos(a);
+            const y = cy + (i/4)*r*Math.sin(a);
+            j===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
         });
-        
-        // 设置初始状态
-        document.body.style.opacity = '0';
-    </script>
+        ctx.closePath();
+        ctx.strokeStyle = "#eee";
+        ctx.stroke();
+    }
+
+    // 轴线
+    angle.forEach(a => {
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.lineTo(cx + r*Math.cos(a), cy + r*Math.sin(a));
+        ctx.strokeStyle = "#eee";
+        ctx.stroke();
+    });
+
+    // 数据多边形
+    ctx.beginPath();
+    data.forEach((v,i) => {
+        const nr = (v/max)*r;
+        const x = cx + nr*Math.cos(angle[i]);
+        const y = cy + nr*Math.sin(angle[i]);
+        i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = "rgba(157,78,221,0.2)";
+    ctx.fill();
+    ctx.strokeStyle = "#9d4edd";
+    ctx.stroke();
+
+    // 点
+    data.forEach((v,i) => {
+        const nr = (v/max)*r;
+        const x = cx + nr*Math.cos(angle[i]);
+        const y = cy + nr*Math.sin(angle[i]);
+        ctx.beginPath();
+        ctx.arc(x,y,8,0,Math.PI*2);
+        ctx.fillStyle = "#9d4edd";
+        ctx.fill();
+    });
+
+    // 标签（现在位置在画布内，不会被截断）
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = "#9d4edd";
+    ctx.textAlign = "center";
+    const labelData = [
+        {x: cx, y: cy - r - 20, text: `${labels[0]}(${data[0]}分)`},
+        {x: cx + r + 20, y: cy, text: `${labels[1]}(${data[1]}分)`},
+        {x: cx, y: cy + r + 25, text: `${labels[2]}(${data[2]}分)`},
+        {x: cx - r - 20, y: cy, text: `${labels[3]}(${data[3]}分)`}
+    ];
+    labelData.forEach(item => {
+        ctx.fillText(item.text, item.x, item.y);
+    });
+}
+
+// ==============================================
+// 六、原因 & 建议
+// ==============================================
+function showCause() {
+    const total = score.physical + score.cognitive + score.behavioral + score.emotional;
+    const list = document.getElementById("causeList");
+    let arr = [];
+    if (total > 50) {
+        arr.push("近期压力较大，身心负荷偏高，超过了自身调节能力");
+        arr.push("休息不足、生活节奏偏快，缺乏足够的放松和恢复时间");
+        arr.push("对未来思虑较多，过度关注未发生的事情，导致心理负担加重");
+    }
+    if (score.physical > 20) arr.push("生理反应明显，可能与睡眠质量差、缺乏规律运动、饮食不规律相关");
+    if (score.cognitive > 20) arr.push("容易过度思考、反复纠结、担心负面结果，形成了消极的思维模式");
+    if (score.behavioral > 20) arr.push("存在回避、拖延、过度检查等行为表现，这些行为会进一步强化焦虑状态");
+    if (score.emotional > 20) arr.push("情绪波动大，安全感不足，难以有效调节自身情绪状态");
+    list.innerHTML = arr.map(i=>`<li>${i}</li>`).join('');
+}
+
+function showSuggest() {
+    const total = score.physical + score.cognitive + score.behavioral + score.emotional;
+    const list = document.getElementById("suggestList");
+    let arr = [];
     
-    <script>
-        // 预设外卖选项
-        const foodCategories = {
-            popular: [
-                '麻辣烫', '烧烤', '麻辣香锅', '奶茶', '螺蛳粉', 
-                '汉堡', '皮蛋瘦肉粥', '鸡公煲', '盖浇饭', '黄焖鸡米饭'
-            ],
-            chinese: [
-                '老乡鸡', '乡村基', '米村拌饭', '南城香', '永和大王',
-                '真功夫', '杨铭宇黄焖鸡米饭', '阿香米线', '曼玲粥店', '犟骨头排骨饭'
-            ],
-            western: [
-                '肯德基', '麦当劳', '华莱士', '塔斯汀', '德克士',
-                '汉堡王', '赛百味', '必胜客', '达美乐', '尊宝比萨'
-            ],
-            drinks: [
-                '蜜雪冰城', '霸王茶姬', '古茗', '茶百道', '喜茶',
-                '奈雪的茶', '茶颜悦色', '沪上阿姨', 'CoCo都可', '书亦烧仙草'
-            ]
-        };
-        
-        // 颜色配置
-        const colors = [
-            '#FF6B00', '#FF8E00', '#FFD166', '#06D6A0', '#118AB2', 
-            '#073B4C', '#EF476F', '#FFD166', '#06D6A0', '#118AB2',
-            '#073B4C', '#EF476F', '#FF6B00', '#FF8E00', '#FFD166'
+    if (total <= 50) {
+        arr = [
+            "保持规律作息：每天固定睡眠时间（7-8小时），建立稳定的生物钟",
+            "适度运动：每周进行3-4次中等强度运动，如快走、慢跑、瑜伽、游泳等，每次30分钟以上",
+            "保持社交：每周与亲友进行1-2次面对面交流，分享生活感受，维持良好的社会支持系统",
+            "培养兴趣爱好：投入到喜欢的活动中（如阅读、绘画、烹饪、园艺），保持心理愉悦状态"
         ];
-        
-        // 应用状态
-        let currentFoods = [...foodCategories.popular];
-        let isScrolling = false;
-        let scrollInterval = null;
-        let currentIndex = 0;
-        let scrollSpeed = 100; // 初始滚动速度（毫秒）
-        
-        // DOM 元素
-        const scroller = document.getElementById('scroller');
-        const scrollerText = document.getElementById('scrollerText');
-        const spinBtn = document.getElementById('spinBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const newOptionInput = document.getElementById('newOption');
-        const addBtn = document.getElementById('addBtn');
-        const customOptionsContainer = document.getElementById('customOptions');
-        const recommendBtn = document.getElementById('recommendBtn');
-        const resultModal = document.getElementById('resultModal');
-        const resultFood = document.getElementById('resultFood');
-        const closeModal = document.getElementById('closeModal');
-        const spinAgainBtn = document.getElementById('spinAgainBtn');
-        const categoryBtns = document.querySelectorAll('.category-btn');
-        
-        // 初始化应用
-        function init() {
-            // 确保DOM完全加载
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                    renderCustomOptions();
-                    setupEventListeners();
-                    // 更新初始显示
-                    scrollerText.textContent = currentFoods[0] || '准备开始';
-                });
-            } else {
-                renderCustomOptions();
-                setupEventListeners();
-                // 更新初始显示
-                scrollerText.textContent = currentFoods[0] || '准备开始';
-            }
-        }
-        
-        // 渲染自定义选项
-        function renderCustomOptions() {
-            customOptionsContainer.innerHTML = '';
-            
-            currentFoods.forEach((food, index) => {
-                const item = document.createElement('div');
-                item.className = 'custom-item';
-                item.innerHTML = `
-                    <span class="font-medium">${food}</span>
-                    <button class="delete-btn text-red-500 hover:text-red-700 focus:outline-none" data-index="${index}">
-                        <i class="fa fa-trash"></i>
-                    </button>
-                `;
-                customOptionsContainer.appendChild(item);
-            });
-            
-            // 添加删除按钮事件监听
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const index = parseInt(e.currentTarget.dataset.index);
-                    removeFood(index);
-                });
-            });
-        }
-        
-        // 设置事件监听
-        function setupEventListeners() {
-            // 开始滚动按钮
-            spinBtn.addEventListener('click', startScrolling);
-            
-            // 停止按钮
-            stopBtn.addEventListener('click', stopScrolling);
-            
-            // 添加选项
-            addBtn.addEventListener('click', addFood);
-            newOptionInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') addFood();
-            });
-            
-            // 推荐按钮
-            recommendBtn.addEventListener('click', showRecommendations);
-            
-            // 结果弹窗
-            closeModal.addEventListener('click', hideResult);
-            spinAgainBtn.addEventListener('click', () => {
-                hideResult();
-                startScrolling();
-            });
-            
-            // 分类按钮
-            categoryBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const category = btn.dataset.category;
-                    if (foodCategories[category]) {
-                        currentFoods = [...foodCategories[category]];
-                        renderCustomOptions();
-                        
-                        // 如果正在滚动，先停止
-                        if (isScrolling) {
-                            stopScrolling();
-                        }
-                        
-                        // 更新显示
-                        scrollerText.textContent = currentFoods[0] || '无选项';
-                        
-                        // 高亮选中的分类
-                        categoryBtns.forEach(b => b.classList.remove('ring-2', 'ring-primary'));
-                        btn.classList.add('ring-2', 'ring-primary');
-                    }
-                });
-            });
-        }
-        
-        // 开始滚动
-        function startScrolling() {
-            if (isScrolling || currentFoods.length === 0) return;
-            
-            isScrolling = true;
-            spinBtn.disabled = true;
-            spinBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            stopBtn.disabled = false;
-            stopBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            
-            // 重置索引和速度
-            currentIndex = 0;
-            scrollSpeed = 100;
-            
-            // 创建滚动动画
-            animateScroll();
-        }
-        
-        // 滚动动画
-        function animateScroll() {
-            if (!isScrolling) return;
-            
-            // 更新文本
-            scrollerText.textContent = currentFoods[currentIndex];
-            
-            // 应用弹跳动画
-            gsap.fromTo(scrollerText, 
-                { y: 20, opacity: 0.5 },
-                { y: 0, opacity: 1, duration: 0.1, ease: "power2.out" }
-            );
-            
-            // 更新索引
-            currentIndex = (currentIndex + 1) % currentFoods.length;
-            
-            // 设置下一次滚动
-            scrollInterval = setTimeout(animateScroll, scrollSpeed);
-        }
-        
-        // 停止滚动
-        function stopScrolling() {
-            if (!isScrolling) return;
-            
-            // 清除滚动间隔
-            clearTimeout(scrollInterval);
-            
-            // 随机选择一个结果
-            const randomIndex = Math.floor(Math.random() * currentFoods.length);
-            const selectedFood = currentFoods[randomIndex];
-            
-            // 显示最终结果
-            scrollerText.textContent = selectedFood;
-            
-            // 更新状态
-            isScrolling = false;
-            spinBtn.disabled = false;
-            spinBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            stopBtn.disabled = true;
-            stopBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            
-            // 显示结果弹窗
-            showResult(randomIndex);
-        }
-        
-        // 添加食物选项
-        function addFood() {
-            const newFood = newOptionInput.value.trim();
-            if (newFood && !currentFoods.includes(newFood)) {
-                currentFoods.push(newFood);
-                renderCustomOptions();
-                
-                // 如果当前没有显示任何内容，更新显示
-                if (scrollerText.textContent === '准备开始' || scrollerText.textContent === '无选项') {
-                    scrollerText.textContent = newFood;
-                }
-                
-                newOptionInput.value = '';
-            }
-        }
-        
-        // 删除食物选项
-        function removeFood(index) {
-            if (currentFoods.length <= 2) {
-                alert('至少需要保留2个选项才能滚动！');
-                return;
-            }
-            
-            currentFoods.splice(index, 1);
-            renderCustomOptions();
-            
-            // 如果删除的是当前显示的项，更新显示
-            if (currentFoods.length > 0) {
-                scrollerText.textContent = currentFoods[0];
-            } else {
-                scrollerText.textContent = '无选项';
-            }
-        }
-        
-        // 显示推荐
-        function showRecommendations() {
-            const allCategories = Object.values(foodCategories).flat();
-            const randomFood = allCategories[Math.floor(Math.random() * allCategories.length)];
-            
-            if (!currentFoods.includes(randomFood)) {
-                currentFoods.push(randomFood);
-                renderWheel();
-                renderCustomOptions();
-                
-                // 显示提示
-                const toast = document.createElement('div');
-                toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
-                toast.textContent = `已添加推荐: ${randomFood}`;
-                document.body.appendChild(toast);
-                
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
-            }
-        }
-        
-        // 显示结果
-        function showResult(index) {
-            const food = currentFoods[index];
-            resultFood.textContent = food;
-            
-            // 创建庆祝效果
-            createConfetti();
-            
-            // 显示弹窗
-            resultModal.classList.add('active');
-        }
-        
-        // 隐藏结果
-        function hideResult() {
-            resultModal.classList.remove('active');
-            
-            // 清除所有彩纸
-            const confettiElements = document.querySelectorAll('.confetti');
-            confettiElements.forEach(el => el.remove());
-        }
-        
-        // 创建彩纸效果
-        function createConfetti() {
-            const confettiCount = 100;
-            const confettiColors = ['#FF6B00', '#FFD166', '#06D6A0', '#118AB2', '#EF476F'];
-            
-            for (let i = 0; i < confettiCount; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = `${Math.random() * 100}vw`;
-                confetti.style.top = `${Math.random() * 100}vh`;
-                confetti.style.setProperty('--color', confettiColors[Math.floor(Math.random() * confettiColors.length)]);
-                confetti.style.width = `${Math.random() * 10 + 5}px`;
-                confetti.style.height = `${Math.random() * 10 + 5}px`;
-                confetti.style.animationDelay = `${Math.random() * 3}s`;
-                confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
-                
-                document.body.appendChild(confetti);
-            }
-        }
-        
-        // 初始化应用
-        init();
-    </script>
+    } 
+    else if (total <= 80) {
+        arr = [
+            "每天进行深呼吸放松：采用4-7-8呼吸法（吸气4秒，屏息7秒，呼气8秒），早晚各10分钟",
+            "保证优质睡眠：睡前1小时远离电子设备，可听轻音乐、泡热水脚，营造舒适的睡眠环境",
+            "减少咖啡因和糖分摄入：避免下午和晚上饮用咖啡、浓茶，减少精制糖的摄入",
+            "进行正念冥想：每天15分钟正念练习，专注当下，减少不必要的思虑",
+            "设定合理目标：将大目标分解为小步骤，避免过度追求完美，接受不完美的自己"
+        ];
+    } 
+    else if (total <= 120) {
+        arr = [
+            "坚持放松训练：学习渐进式肌肉放松法，每天练习20分钟，缓解身体紧张",
+            "记录情绪日记：每天花10分钟记录自己的情绪变化和触发事件，了解焦虑模式",
+            "适当倾诉：找信任的人倾诉内心感受，释放心理压力，避免独自承受",
+            "调整认知方式：识别并挑战消极思维，用更客观、积极的方式看待问题",
+            "安排放松时间：每天预留30分钟专属放松时间，做自己喜欢的事情，完全放空",
+            "限制信息摄入：减少刷手机、看新闻的时间，避免信息过载加重焦虑"
+        ];
+    } 
+    else if (total <= 160) {
+        arr = [
+            "寻求专业心理咨询：建议预约心理咨询师，进行认知行为治疗（CBT）等专业干预",
+            "减少压力源：暂时减少工作或学习任务量，优先处理最重要的事情，学会拒绝不合理要求",
+            "家人陪伴支持：与家人沟通自己的状态，获得理解和陪伴，避免孤立自己",
+            "参加支持小组：加入焦虑情绪支持团体，与有相似经历的人交流，减少孤独感",
+            "规律进行放松活动：如正念减压、艺术疗愈、户外散步等，每天至少1小时",
+            "学习情绪调节技巧：如情绪命名、接纳情绪、积极自我对话等实用方法"
+        ];
+    } 
+    else {
+        arr = [
+            "尽快进行专业心理评估：建议到正规医院心理科或精神科进行全面评估和诊断",
+            "必要时接受医学干预：遵从专业医生建议，考虑药物治疗结合心理治疗的综合方案",
+            "加强支持系统：家人和亲友给予持续的理解、陪伴和支持，避免指责和催促",
+            "创建安全舒适的环境：减少环境中的刺激因素，营造安静、温馨的生活空间",
+            "制定结构化日常：建立规律的日常生活节奏，减少不确定性带来的焦虑",
+            "避免独处过久：确保每天有家人或专业人员的陪伴，及时发现并处理情绪危机"
+        ];
+    }
+    
+    list.innerHTML = arr.map(i=>`<li>${i}</li>`).join('');
+}
+
+// ==============================================
+// 七、结果生图保存
+// ==============================================
+function saveResultImage() {
+    const box = document.getElementById("resultPage");
+    html2canvas(box, {scale:2, useCORS:true}).then(canvas => {
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = "焦虑测评报告.png";
+        a.click();
+        alert("报告已保存到相册");
+    });
+}
+
+// ==============================================
+// 八、重新测评
+// ==============================================
+function restartTest() {
+    document.getElementById("resultPage").style.display = "none";
+    document.getElementById("startPage").style.display = "block";
+}
+</script>
 </body>
 </html>
